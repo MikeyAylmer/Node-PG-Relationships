@@ -68,3 +68,12 @@ VALUES
   (2, 'js'),
   (3, 'js'),
   (3, 'py');
+
+-- query written in SQL file to join a many to many relationship between tags, messages, and message_tags.
+SELECT m.id, m.msg, t.tag
+FROM messages AS m
+LEFT JOIN messages_tags AS mt
+ON m.id = mt.message_id
+LEFT JOIN tags as t
+ON mt.tag_code = t.code
+WHERE m.id = 1;

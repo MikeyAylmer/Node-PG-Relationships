@@ -3,6 +3,23 @@ const express = require("express");
 const router = express.Router();
 const ExpressError = require("../expressError");
 
+// GET/ message and name based off of user_id and users.id
+router.get('/:id', async (req, res, next) => {
+  try {
+    const results = await db.query(
+      `SELECT u.name, m.msg
+      FROM messages AS m
+      LEFT JOIN users AS u
+      ON u.id = m.user_id
+      WHERE u.id = $1`, [req.params.id]
+    );
+    const { name, msg } = results.rows[0];
+    return res.send({ name, msg })
+  } catch (err) {
+    return next(err)
+  }
+})
+
 router.get('/:id', async (req, res, next) => {
   try {
     const results = await db.query(`
@@ -16,8 +33,11 @@ router.get('/:id', async (req, res, next) => {
     if (results.rows.length === 0) {
       throw new ExpressError(`Message not found with id ${req.params.id}`, 404)
     }
+    // destructure the two variables id and msg from results.
     const { id, msg } = results.rows[0];
+    // use .map to iterate over the data to just get the tag.
     const tags = results.rows.map(r => r.tag);
+
     return res.send({ id, msg, tags })
   } catch (e) {
     return next(e)
@@ -26,6 +46,7 @@ router.get('/:id', async (req, res, next) => {
 
 router.patch('/:id', async (req, res, next) => {
   try {
+    // SQL query to update msg.
     const result = await db.query(
       `UPDATE messages SET msg = $1 WHERE id = $2
         RETURNING id, user_id, msg`,
